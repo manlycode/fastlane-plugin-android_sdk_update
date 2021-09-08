@@ -4,7 +4,7 @@ module Fastlane
       def self.run(params)
         # Install Android-SDK via brew
         sdk_path = determine_sdk(params)
-        sdk_manager = File.expand_path("tools/bin/sdkmanager", sdk_path)
+        sdk_manager = File.expand_path("cmdline-tools/latest/bin/sdkmanager", sdk_path)
 
         # Define required packages
         require 'java-properties'
@@ -50,14 +50,21 @@ module Fastlane
       def self.determine_sdk(params)
         # on mac
         if FastlaneCore::Helper.mac?
-          require 'fastlane/plugin/brew'
-          Actions::BrewAction.run(command: "list --cask --versions android-sdk || brew install --cask android-sdk")
-          sdk_path = File.realpath("../../..", FastlaneCore::CommandExecutor.which("sdkmanager"))
+          sdk_path = File.expand_path(params[:sdk_dir])
+          if File.exist?("#{sdk_path}/cmdline-tools/latest/bin/sdkmanager")
+            UI.message("Using existing android-sdk at #{sdk_path}")
+          else
+            UI.message("Downloading android-sdk to #{sdk_path}")
+            require 'fastlane/plugin/brew'
+            Actions::BrewAction.run(command: "list --cask --versions android-sdk || brew install --cask android-sdk")
+            sdk_path = File.realpath("../../..", FastlaneCore::CommandExecutor.which("sdkmanager"))
+          end
+          
 
         # on linux
         elsif FastlaneCore::Helper.linux?
-          sdk_path = File.expand_path(params[:linux_sdk_dir])
-          if File.exist?("#{sdk_path}/tools/bin/sdkmanager")
+          sdk_path = File.expand_path(params[:sdk_dir])
+          if File.exist?("#{sdk_path}/cmdline-tools/latest/bin/sdkmanager")
             UI.message("Using existing android-sdk at #{sdk_path}")
           else
             UI.message("Downloading android-sdk to #{sdk_path}")
@@ -141,9 +148,9 @@ module Fastlane
                                        description: "Update all installed packages to the latest versions",
                                        is_string: false,
                                        default_value: false),
-          FastlaneCore::ConfigItem.new(key: :linux_sdk_dir,
-                                        env_name: "FL_ANDROID_LINUX_SDK_DIR",
-                                        description: "Directory for Android SDK on Linux",
+          FastlaneCore::ConfigItem.new(key: :sdk_dir,
+                                        env_name: "FL_ANDROID_SDK_DIR",
+                                        description: "Directory for Android SDK",
                                         optional: true,
                                         default_value: ENV['ANDROID_HOME'] || ENV['ANDROID_SDK'] || ENV['ANDROID_SDK_ROOT'] || "~/.android-sdk"),
           FastlaneCore::ConfigItem.new(key: :linux_sdk_download_url,
