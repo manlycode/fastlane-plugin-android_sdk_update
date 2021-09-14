@@ -54,10 +54,8 @@ module Fastlane
           if File.exist?("#{sdk_path}/cmdline-tools/latest/bin/sdkmanager")
             UI.message("Using existing android-sdk at #{sdk_path}")
           else
-            UI.message("Downloading android-sdk to #{sdk_path}")
-            require 'fastlane/plugin/brew'
-            Actions::BrewAction.run(command: "list --cask --versions android-sdk || brew install --cask android-sdk")
-            sdk_path = File.realpath("../../..", FastlaneCore::CommandExecutor.which("sdkmanager"))
+            UI.error("Please install the latest Android Command line tools in Android Studio via:")
+            UI.error("Preferences > Appearance & Behavior > System Settings > Android SDK (tab) > SDK Tools -- Check 'Android SDK Command-line Tools (latest)'")
           end
           
 
